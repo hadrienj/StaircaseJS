@@ -1,19 +1,19 @@
-In psychophysics, perception ability is often assessed using adaptive procedure (task difficulty is modify according to participant answers). With staircase procedures ([](https://en.wikipedia.org/wiki/Psychophysics#Staircase_procedures)) the stimulus intensity begin high and is reduced when right answers are provided and increased when wrong answers are provided. The parameters used are generally:
+# Background
+
+In psychophysics, perception is often assessed using adaptive procedures (task difficulty is modified according to participants answers). With staircase procedures ([https://en.wikipedia.org/wiki/Psychophysics#Staircase_procedures]()) the stimulus intensity begins high and is reduced when right answers are provided and increased when wrong answers are provided. Several parameters are generally used:
 
 - The equation converting the old value to the new one (according to the answer provided for the old one)
-- The number of right answers needed to increase the difficulty (when only one wrong answer will decrease it; corresponds to 1-up, n-down).
+- The number of right answers `n` needed to increase the difficulty (when only one wrong answer will decrease it; corresponds to 1-up, n-down).
 
-The StaircaseJS module can be used to manage the value of a stimulus and implement an adaptive procedure, typically for psychophysical experiments made in JavaScript.
-
-# Instalation
+The StaircaseJS module can be used to manage the value of a stimulus implementing an adaptive procedure, typically for psychophysical experiments made in JavaScript.
 
 # Usage
 
-Create a new staircase will allow to store and track the values of the stimulus. The parameters of the staircase (equation used to change the value, 1-up n-down etc.) has to be set when the contructor is instanciated
+Create a new staircase will allow you to store and track the values of the stimulus. The parameters of the staircase (equation used to change the value, 1-up n-down etc.) has to be set when the contructor is instanciated.
 
 ## Instanciation
 
-Staircase objects are created using the Staircase constructor with an object as argument.
+Staircase objects are created using the Staircase constructor with an object as argument:
 
 ```javascript
 var stair = new Staircase(
@@ -27,7 +27,7 @@ var stair = new Staircase(
 });
 ```
 
-This object has to contain the name of the staircase as key and its parameters in another object as property. Thus, the form of the argument is:
+This object has to contain the name of the staircase as `key` and its parameters in another object as `property`. Thus, the form of the argument is:
 
 ```js
 {
@@ -39,7 +39,13 @@ This object has to contain the name of the staircase as key and its parameters i
 }
 ```
 
-In the next example, we will create a `stair` object to manage the frequency of a sound. At each trial, participants hear two sounds and have to tell which one is higher in frequency. One sound has a fixed frequency of 1000Hz and the other has a changing frequency around 1000Hz. The frequency of this second sound is adaptively chosen according to participant's answers.
+## Example
+
+### Procedure
+
+In this first example, we will create a `stair` object to manage the frequency of a sound. At each trial, participants hear two sounds and have to tell which one is higher in frequency. One sound has a fixed frequency of 1000Hz and the other has a changing frequency around 1000Hz. The frequency of this second sound is adaptively chosen according to participant's answers.
+
+### Set parameters
 
 ```js
 var stair = new Staircase(
@@ -53,7 +59,7 @@ var stair = new Staircase(
 });
 ```
 
-We will set the first value to 100 cents (one semi-tone) and choose a 1-up 2-down procedure (the difficulty will be increased after 2 right answer and decreased after 1 wrong answer) with the `down` parameter. We also set the limit of the frequency difference between 0 and 600 cents with the `limits` parameter. The `factor` is used to set the amount of change.
+We will set the first value to 100 cents (one semi-tone) and choose a 1-up 2-down procedure (the difficulty will be increased by an amount `x` after 2 right answers and decreased  of this same amount after 1 wrong answer) with the `down` parameter. We also set the limit of the frequency difference between 0 and 600 cents with the `limits` parameter. The `factor` parameter is used to set the amount of change.
 
 Activate the staircase:
 
@@ -73,7 +79,7 @@ At this time, a new value is stored in the `stair` object depending of the answe
 sound.frequency.value = stair.getLast('deltaF');
 ```
 
-The historic of the values can be got with:
+The historic of the values can be obtained with:
 
 ```js
 stair.get('deltaF');
@@ -103,7 +109,7 @@ newValue = 80*1.25;
 
 ## Multiple staircases
 
-It is possible to use the staircase module to maintain more than one stairecase. To do that, specify multiple object in the object used to instanciate `Staircase()`.
+It is possible to use the staircase module to maintain more than one stairecase. To do that, specify multiple objects in the object used to instanciate `Staircase()`.
 
 ```js
 {
@@ -119,6 +125,8 @@ It is possible to use the staircase module to maintain more than one stairecase.
   },
 }
 ```
+
+### Example
 
 Here is an example of two staircases used to modulate two difficulty parameters in a psychoacoustical task: the frequency difference between two sounds as in the first example and the volume of the sounds.
 
@@ -142,7 +150,7 @@ var stairs = new Staircase(
 });
 ```
 
-Then, when the stairs variable is initialized, one staircase will be randomly chosen as the active one. Thus, a right answer will only increase the difficulty concerning the active staircase.
+Then, when the `stairs` variable is initialized, one staircase will be randomly chosen as the active one. Thus, a right answer will only increase the difficulty concerning the active staircase.
 
 The method `changeActive()` is used to change the active staircase. In this case, the staircase will be deactivated and another one will be activated (again randomly chosen).
 
@@ -150,7 +158,7 @@ For this example, we will implement the two staircases following these rules:
 
 Change the active staircase when:
 
-- the answer is wrong
+- if the answer is wrong
 - if there is two much consecutive right answers
 - if limit of allowed values is reached
 
