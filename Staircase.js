@@ -1,6 +1,5 @@
-import {randInt} from "./helper"
 
-export function Staircase(stairs, opts) {
+function Staircase(stairs, opts) {
 	this.stairs = {};
 	for (var i in stairs) {
 		this.stairs[i] = stairs[i];
@@ -149,4 +148,7 @@ Staircase.prototype.active = function (stair) {
 			return i;
 		}
 	}
+};
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
