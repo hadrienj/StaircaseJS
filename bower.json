@@ -1,0 +1,13 @@
+{
+  "name": "modulesHj",
+  "version": "0.0.1",
+  "browserify": {
+    "transform": [
+      "babelify"
+    ]
+  },
+  "main" : [
+    "Staircase.js",
+  ]
+}
+
