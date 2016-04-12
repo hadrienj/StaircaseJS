@@ -16,18 +16,17 @@ Create a new staircase will allow you to store and track the values of the stimu
 Staircase objects are created using the Staircase constructor with an object as argument:
 
 ```javascript
-var stair = new Staircase(
-  {
-    deltaF: {
-      firstVal: 100,
-      down: 3,
-      factor: 1.25,
-      limits: [0, 600],
-    }
+var stair = new Staircase({
+  deltaF: {
+    firstVal: 100,
+    down: 3,
+    factor: 1.25,
+    limits: [0, 600],
+  }
 });
 ```
 
-This object has to contain the name of the staircase as `key` and its parameters in another object as `property`. Thus, the form of the argument is:
+This object has to contain the name of the staircase as a `key` and its parameters in another object as a `property`. Thus, the form of the argument is:
 
 ```js
 {
@@ -48,14 +47,13 @@ In this first example, we will create a `stair` object to manage the frequency o
 ### Set parameters
 
 ```js
-var stair = new Staircase(
-  {
-    deltaF: {
-      firstVal: 100,
-      down: 2,
-      limits: [0, 600],
-      factor: 1.25,
-    }
+var stair = new Staircase({
+  deltaF: {
+    firstVal: 100,
+    down: 2,
+    limits: [0, 600],
+    factor: 1.25,
+  }
 });
 ```
 
@@ -73,7 +71,7 @@ Provide the answer (right: `true`, wrong: `false`) in the `next` method:
 stair.next(goodAnswer);
 ```
 
-At this time, a new value is stored in the `stair` object depending of the answer. This new value can be used to change the frequency of the sound. We only have to get the value in specifying the staircase name:
+At this time, a new value is stored in the `stair` object depending of the answer. This new value can be used to change the frequency of the sound. We only have to get the value of our `deltaF` staircase:
 
 ```js
 sound.frequency.value = stair.getLast('deltaF');
@@ -93,12 +91,13 @@ These equations are used to implement the 1-up n-down procedure:
 
 - Decreasing (wrong answer): `newValue = oldValue / (Math.pow(factor, 1/down));` and increasing (right answer): `newValue = oldValue * factor;`.
 
-Instead of keeping the same value `n` times and then change the value by `factor`, we change the value each time. Example:
+Instead of keeping the same value `n` times and then change the value by `factor`, we change the value each time:
 
 ```javascript
-// good answer:
+// first value = 100
+// then good answer
 newValue = 100/(Math.pow(1.25, 1/2));
-// = 89.44
+// result = 89.44
 // then good answer again
 newValue = 89.44/(Math.pow(1.25, 1/2));
 // = 80
@@ -132,85 +131,81 @@ Here is an example of two staircases used to modulate two difficulty parameters 
 
 ```javascript
 // create a variable containing 2 staircases that will be used in parallel
-var stairs = new Staircase(
-  {
-    deltaF: {
-      firstVal: 100,
-      down: 2,
-      factor: 1.25,
-      limits: [0, 600],
-    },
-    volume: {
-      firstVal: 0.5,
-      down: 2,
-      factor: 1.25,
-      limits: [0, 1],
-    }
+var stairs = new Staircase({
+  deltaF: {
+    firstVal: 100,
+    down: 2,
+    factor: 1.25,
+    limits: [0, 600],
+  },
+  volume: {
+    firstVal: 0.5,
+    down: 2,
+    factor: 1.25,
+    limits: [0, 1],
   }
 });
 ```
 
-Then, when the `stairs` variable is initialized, one staircase will be randomly chosen as the active one. Thus, a right answer will only increase the difficulty concerning the active staircase.
+When the `stairs` variable is initialized, one staircase will be randomly chosen as the active one. A right answer will only increase the difficulty concerning the active staircase.
 
-The method `changeActive()` is used to change the active staircase. In this case, the staircase will be deactivated and another one will be activated (again randomly chosen).
+The method `changeActive()` is used to change the active staircase: the staircase will be deactivated and another one will be activated (again randomly chosen).
 
 For this example, we will implement the two staircases following these rules:
 
-Change the active staircase when:
+Change the active staircase if:
 
-- if the answer is wrong
-- if there is two much consecutive right answers
-- if limit of allowed values is reached
+- the answer is wrong
+- there is two much consecutive right answers
+- limit of allowed values is reached
 
 The `sameStairMax` option will tell the maximum number of values allowed. Options can be passed as a second object argument in `Staircase()`:
 
 
 ```javascript
 // create a variable containing 2 staircases that will be used in parallel
-var stairs = new Staircase(
-  {
-    deltaF: {
-      firstVal: 100,
-      down: 2,
-      factor: 1.25,
-      limits: [0, 600],
-    },
-    volume: {
-      firstVal: 0.5,
-      down: 2,
-      factor: 1.25,
-      limits: [0, 1],
-    },
+var stairs = new Staircase({
+  deltaF: {
+    firstVal: 100,
+    down: 2,
+    factor: 1.25,
+    limits: [0, 600],
   },
-  {
-    sameStairMax: 4,
-  }
-});
+  volume: {
+    firstVal: 0.5,
+    down: 2,
+    factor: 1.25,
+    limits: [0, 1],
+  },
+},
+{
+  sameStairMax: 4,
+}
+);
 ```
 
-Let's begin with initialized our new `stairs` object:
+Let's begin by initializing our new `stairs` object:
 
 ```js
-// Choose randomly what will be the first active staircase
+// Choose randomly the first active staircase
 stairs.init();
 ```
 
-And to implement the above conditions we can use different properties of our `stairs` object:
+To implement the above conditions we will use different properties of our `stairs` object:
 
 ```js
-// `sameStairCount` is a global variable tracking the
-// number of values in the same staircase;
-// `sameStairMax` was set in the options or equal to 4;
-// the method `getActive()` return the active staircase
-// `limitReached` is true when the actual value reach one
-// bound of the limits set in the parameters.
-// `changeActive()` will change the active staircase.
 if (stairs.sameStairCount>=stairs.sameStairMax ||
   !goodAnswer ||
   stairs.getActive().limitReached) {
   stairs.changeActive();
 }
 ```
+
+`sameStairCount` is a global variable tracking the number of values in the same staircase. It has to be higher than `sameStairMax`.
+
+The method `getActive()` return the active staircase. We call the property `limitReached` of this staircase. It is true when the actual value reach one bound of the limits set in the parameters.
+
+Finally, `changeActive()` will change the active staircase.
 
 Now the procedure is the same as with one staircase: we call the next value of the updated active staircase:
 
@@ -220,7 +215,7 @@ Now the procedure is the same as with one staircase: we call the next value of t
 stairs.next(goodAnswer);
 ```
 
-Finally, we use the values of our staircases:
+Finally, we can use the values of our staircases:
 
 ```js
 sound.vol = stairs.getLast('volume');
@@ -229,8 +224,10 @@ sound.frequency.value = stair.getLast('deltaF');
 
 ## Stairecase parameters:
 
-- `firstVal`: the first value of the variable
-- `down`: how many good answers are required to match one bad answer. For instance, if `down=2` the value will decrease (or increase according to the direction of the difficulty, see last parameter `direction`) of an amount `x` after 2 good answer and will increase of the same amount `x` for one bad answer. This corresponds to an 1-up 2-down procedure.
+These parameters can be used to instanciate `Staircase()`:
+
+- `firstVal`: the first value of the variable.
+- `down`: how many good answers are required to match one bad answer. For instance, if `down=2` the value will decrease (or increase according to the direction of the difficulty, see parameter `direction`) of an amount `x` after 2 good answers and will increase of the same amount `x` for one bad answer. This corresponds to an 1-up 2-down procedure.
 - `factor`: this is the value of the multiplicator used to change the variable.
 - `direction`: tells if a good answer is associated with a decrease (`direction=-1`) or an increase (`direction=1`) of the value. The default behaviour is a decrease of the value when a good answer is provided (like for frequency thresholds for example).
 - `limits`: define the lower and upper values that can be used. When reached, the value will stay to the bound until there is an opposite answer.
