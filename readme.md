@@ -159,9 +159,6 @@ Change the active staircase if:
 - there is two much consecutive right answers
 - limit of allowed values is reached
 
-The `sameStairMax` option will tell the maximum number of values allowed. Options can be passed as a second object argument in `Staircase()`:
-
-
 ```javascript
 // create a variable containing 2 staircases that will be used in parallel
 var stairs = new Staircase({
@@ -177,11 +174,7 @@ var stairs = new Staircase({
     factor: 1.25,
     limits: [0, 1],
   },
-},
-{
-  sameStairMax: 4,
-}
-);
+});
 ```
 
 Let's begin by initializing our new `stairs` object:
@@ -232,12 +225,7 @@ These parameters can be used to instanciate `Staircase()`:
 - `direction`: tells if a good answer is associated with a decrease (`direction=-1`) or an increase (`direction=1`) of the value. The default behaviour is a decrease of the value when a good answer is provided (like for frequency thresholds for example).
 - `limits`: define the lower and upper values that can be used. When reached, the value will stay to the bound until there is an opposite answer.
 - `operation`: can be `multiply` or `add`. Determine what operation to do with the factor. If `operation: 'multiply'`, the increased value will be `*` by factor and the decrease value `/` by factor. If `operation: 'add'`, the increased value will be `+` by factor and the decrease value `-` by factor.
-
-## Options
-
-A second object containing options can also be passed to the `Staircase` constructor. These options will concern all the staircases.
-
-- `sameStairMax`: it is the maximum changing values on the same staircase before using another staircase.
+- The `sameStairMax` option will tell the maximum number of consecutive trials with this staircase.
 
 ## Methods
 
