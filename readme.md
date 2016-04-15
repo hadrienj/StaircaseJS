@@ -282,3 +282,9 @@ Return the `active` property of `stair`.
 ### `setsameStairMax()`
 
 Change the number of maximum consecutive values in the same staircase (similar to the option `sameStairMax` used to instanciate the Staircase module).
+
+
+# To do
+
+- update doc according to samestaircount (on a staircase basis)
+- fix 1-up n-down for `add` operation....

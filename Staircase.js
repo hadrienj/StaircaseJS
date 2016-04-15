@@ -2,17 +2,13 @@ function Staircase(stairs, opts) {
   this.stairs = {};
   for (var i in stairs) {
     this.stairs[i] = stairs[i];
+    this.stairs[i].name = i;
     this.stairs[i].val = [this.stairs[i].firstVal];
     this.stairs[i].active = false;
     this.stairs[i].limitReached = false;
     this.stairs[i].countSuccGood = 0;
+    this.stairs[i].sameStairCount = 0;
   }
-  if (typeof(opts) === 'undefined') {
-    opts = {sameStairMax: 4};
-  }
-  // globals
-  this.sameStairMax = opts.sameStairMax || 4;
-  this.sameStairCount = 0;
 };
 Staircase.prototype.next = function (goodAns) {
   if (arguments.length===0) {
@@ -25,9 +21,7 @@ Staircase.prototype.next = function (goodAns) {
       var stair = this.stairs[i];
     }
   }
-  var that = this;
   function decreaseVal() {
-    that.sameStairCount++;
     if (stair.operation === 'multiply') {
       stair.val[stair.val.length] = stair.val[stair.val.length-1] /
       (Math.pow(stair.factor, 1/stair.down));
@@ -47,10 +41,9 @@ Staircase.prototype.next = function (goodAns) {
     }
   };
   function increaseVal() {
-    that.sameStairCount++;
     if (stair.operation === 'multiply') {
       stair.val[stair.val.length] = stair.val[stair.val.length-1]*stair.factor;
-    } else if (stair.operation === 'add') {
+    } else if (stair.operation === 'add' && stair.countSuccGood>=stair.down) {
       stair.val[stair.val.length] = stair.val[stair.val.length-1]+stair.factor;
     } else {
       throw new Error("The option '"+stair.operation+
@@ -64,35 +57,34 @@ Staircase.prototype.next = function (goodAns) {
       stair.limitReached = false;
     }
   };
-  if (goodAns && stair.direction===-1 &&
-    stair.countSuccGood>=stair.down) {
+  if (goodAns && stair.direction===-1) {
     // right answer and number of last right answers > down
-    console.log('good, will decrease');
-    decreaseVal();
-  } else if (goodAns && stair.direction===1 &&
-    stair.countSuccGood>=stair.down) {
-    // right answer and number of last right answers > down
-    console.log('good, will increase');
-    increaseVal();
-  } else if (goodAns && stair.countSuccGood<stair.down) {
-    // right answer but not enough right answers in the counter
-    console.log('good but counter too small');
     stair.countSuccGood++;
+    if (stair.operation === 'add' && stair.countSuccGood<stair.down) {
+
+    } else {
+    	stair.sameStairCount++;
+    	decreaseVal();
+    }
+  } else if (goodAns && stair.direction===1) {
+    // right answer and number of last right answers > down
+    stair.countSuccGood++;
+    if (stair.operation === 'add' && stair.countSuccGood<stair.down) {
+
+    } else {
+    	stair.sameStairCount++;
+    	increaseVal();
+    }
   } else if (!goodAns && stair.direction===-1) {
     // answer is wrong
-    console.log('not good, will increase');
     increaseVal();
-    stair.countSuccGood = 0;
   } else if (!goodAns && stair.direction===1) {
     // answer is wrong
-    console.log('not good, will decrease');
     decreaseVal();
-    stair.countSuccGood = 0;
   }
   return stair.val[stair.val.length-1];
 };
 Staircase.prototype.init = function () {
-  this.sameStairCount = 0;
   // deactivate all other staircases
   for (var i in this.stairs) {
     if (this.stairs[i].active) {
@@ -104,13 +96,14 @@ Staircase.prototype.init = function () {
   this.stairs[Object.keys(this.stairs)[rand]].active = true;
 };
 Staircase.prototype.changeActive = function () {
-  this.sameStairCount = 0;
   var possibleStairs = [];
   for (var i in this.stairs) {
     if (!this.stairs[i].active) {
       possibleStairs[possibleStairs.length] = i;
     } else {
       this.stairs[i].active = false;
+      this.stairs[i].sameStairCount = 0;
+      this.stairs[i].countSuccGood = 0;
     }
   }
   var rand = randInt(0, possibleStairs.length-1);
@@ -147,7 +140,4 @@ Staircase.prototype.active = function (stair) {
       return i;
     }
   }
-};
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
