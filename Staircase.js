@@ -111,7 +111,7 @@ Staircase.prototype.lock = function (stair) {
 Staircase.prototype.unlock = function (stair) {
   this.stairs[stair].lock = false;
 };
-Staircase.prototype.isLock = function (stair) {
+Staircase.prototype.isLocked = function (stair) {
   return this.stairs[stair].lock;
 };
 Staircase.prototype.setVal = function (stair, val) {

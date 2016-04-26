@@ -226,6 +226,7 @@ These parameters can be used to instanciate `Staircase()`:
 - `limits`: define the lower and upper values that can be used. When reached, the value will stay to the bound until there is an opposite answer.
 - `operation`: can be `multiply` or `add`. Determine what operation to do with the factor. If `operation: 'multiply'`, the increased value will be `*` by factor and the decrease value `/` by factor. If `operation: 'add'`, the increased value will be `+` by factor and the decrease value `-` by factor.
 - The `sameStairMax` option will tell the maximum number of consecutive trials with this staircase.
+- `lock` can be `true` or `false`. When `true`, the staircase will not be active. This can be used to avoid a staircase for a moment.
 
 ## Methods
 
@@ -271,6 +272,17 @@ Return the `active` property of `stair`.
 
 Change the number of maximum consecutive values in the same staircase (similar to the option `sameStairMax` used to instanciate the Staircase module).
 
+### `lock(stair)`
+
+Set the `lock` property of `stair` to `true`.
+
+### `unlock(stair)`
+
+Set the `lock` property of `stair` to `false`.
+
+### `isLocked(stair)`
+
+Return the `lock` property of `stair`.
 
 # To do
 
