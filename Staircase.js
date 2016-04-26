@@ -21,42 +21,6 @@ Staircase.prototype.next = function (goodAns) {
       var stair = this.stairs[i];
     }
   }
-  function decreaseVal() {
-    if (stair.operation === 'multiply') {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1] /
-      (Math.pow(stair.factor, 1/stair.down));
-    } else if (stair.operation === 'add') {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1] -
-      (Math.pow(stair.factor, 1/stair.down));
-    } else {
-      throw new Error("The option '"+stair.operation+"' is not recognized"+
-        "(takes only 'multiply' or 'add'.");
-    }
-    // check limits
-    if (stair.val[stair.val.length-1]<stair.limits[0]) {
-      stair.val[stair.val.length-1] = stair.limits[0];
-      stair.limitReached = true;
-    } else {
-      stair.limitReached = false;
-    }
-  };
-  function increaseVal() {
-    if (stair.operation === 'multiply') {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1]*stair.factor;
-    } else if (stair.operation === 'add' && stair.countSuccGood>=stair.down) {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1]+stair.factor;
-    } else {
-      throw new Error("The option '"+stair.operation+
-        "' is not recognized (takes" + " only 'multiply' or 'add'.");
-    }
-    // check limits
-    if (stair.val[stair.val.length-1]>stair.limits[1]) {
-      stair.val[stair.val.length-1] = stair.limits[1];
-      stair.limitReached = true;
-    } else {
-      stair.limitReached = false;
-    }
-  };
   if (goodAns && stair.direction===-1) {
     // right answer and number of last right answers > down
     stair.countSuccGood++;
@@ -140,4 +104,58 @@ Staircase.prototype.active = function (stair) {
       return i;
     }
   }
+};
+Staircase.prototype.lock = function (stair) {
+  this.stairs[stair].lock = true;
+};
+Staircase.prototype.unlock = function (stair) {
+  this.stairs[stair].lock = false;
+};
+Staircase.prototype.isLock = function (stair) {
+  return this.stairs[stair].lock;
+};
+Staircase.prototype.setVal = function (stair, val) {
+  this.stairs[stair].val[this.stairs[stair].val.length] = val;
+};
+
+
+
+function decreaseVal() {
+  if (stair.operation === 'multiply') {
+    stair.val[stair.val.length] = stair.val[stair.val.length-1] /
+    (Math.pow(stair.factor, 1/stair.down));
+  } else if (stair.operation === 'add') {
+    stair.val[stair.val.length] = stair.val[stair.val.length-1] -
+    (Math.pow(stair.factor, 1/stair.down));
+  } else {
+    throw new Error("The option '"+stair.operation+"' is not recognized"+
+      "(takes only 'multiply' or 'add'.");
+  }
+  // check limits
+  if (stair.val[stair.val.length-1]<stair.limits[0]) {
+    stair.val[stair.val.length-1] = stair.limits[0];
+    stair.limitReached = true;
+  } else {
+    stair.limitReached = false;
+  }
+};
+function increaseVal() {
+  if (stair.operation === 'multiply') {
+    stair.val[stair.val.length] = stair.val[stair.val.length-1]*stair.factor;
+  } else if (stair.operation === 'add' && stair.countSuccGood>=stair.down) {
+    stair.val[stair.val.length] = stair.val[stair.val.length-1]+stair.factor;
+  } else {
+    throw new Error("The option '"+stair.operation+
+      "' is not recognized (takes" + " only 'multiply' or 'add'.");
+  }
+  // check limits
+  if (stair.val[stair.val.length-1]>stair.limits[1]) {
+    stair.val[stair.val.length-1] = stair.limits[1];
+    stair.limitReached = true;
+  } else {
+    stair.limitReached = false;
+  }
+};
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
