@@ -1,6 +1,4 @@
-import {randInt} from "./helper"
-
-export function Staircase(stairs, opts) {
+function Staircase(stairs, opts) {
   this.stairs = {};
   for (var i in stairs) {
     this.stairs[i] = stairs[i];
@@ -172,4 +170,10 @@ Staircase.prototype.isLocked = function (stair) {
 };
 Staircase.prototype.setVal = function (stair, val) {
   this.stairs[stair].val[this.stairs[stair].val.length] = val;
+};
+
+// Returns a random integer between min (inclusive) and max (inclusive)
+// Using Math.round() will give you a non-uniform distribution!
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 };
