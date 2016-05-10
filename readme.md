@@ -228,6 +228,20 @@ These parameters can be used to instanciate `Staircase()`:
 - The `sameStairMax` option will tell the maximum number of consecutive trials with this staircase.
 - `lock` can be `true` or `false`. When `true`, the staircase will not be active. This can be used to avoid a staircase for a moment.
 
+## Properties
+
+### `name`
+
+### `val`
+
+### `active`
+
+### `limitReached`
+
+### `countSuccGood`
+
+### `sameStairCount`
+
 ## Methods
 
 ### `init()`
@@ -246,7 +260,7 @@ Reset the `sameStairCount` to 0. Randomly choose another staircase to use (the l
 
 ### `getActive()`
 
-Return the staircase object corresponding to the active one.
+Return the active staircase object.
 
 ### `get(stair)`
 
