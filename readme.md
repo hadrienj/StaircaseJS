@@ -137,17 +137,21 @@ var stairs = new Staircase({
     down: 2,
     factor: 1.25,
     limits: [0, 600],
+    sameStairMax: 4,
   },
   volume: {
     firstVal: 0.5,
     down: 2,
     factor: 1.25,
     limits: [0, 1],
+    sameStairMax: 2,
   }
 });
 ```
 
 When the `stairs` variable is initialized, one staircase will be randomly chosen as the active one. A right answer will only increase the difficulty concerning the active staircase.
+
+The `sameStairMax` property set the maximum number of consecutive trials with the same active staircase.
 
 The method `changeActive()` is used to change the active staircase: the staircase will be deactivated and another one will be activated (again randomly chosen).
 
@@ -156,26 +160,8 @@ For this example, we will implement the two staircases following these rules:
 Change the active staircase if:
 
 - the answer is wrong
-- there is two much consecutive right answers
+- there is two much consecutive right answers (according to the `sameStairMax` property)
 - limit of allowed values is reached
-
-```javascript
-// create a variable containing 2 staircases that will be used in parallel
-var stairs = new Staircase({
-  deltaF: {
-    firstVal: 100,
-    down: 2,
-    factor: 1.25,
-    limits: [0, 600],
-  },
-  volume: {
-    firstVal: 0.5,
-    down: 2,
-    factor: 1.25,
-    limits: [0, 1],
-  },
-});
-```
 
 Let's begin by initializing our new `stairs` object:
 
@@ -194,11 +180,11 @@ if (stairs.sameStairCount>=stairs.sameStairMax ||
 }
 ```
 
-`sameStairCount` is a global variable tracking the number of values in the same staircase. It has to be higher than `sameStairMax`.
+`sameStairCount` tracks the number of consecutive trials with the same staircase. It has to be higher than `sameStairMax`.
 
 The method `getActive()` return the active staircase. We call the property `limitReached` of this staircase. It is true when the actual value reach one bound of the limits set in the parameters.
 
-Finally, `changeActive()` will change the active staircase.
+Then, `changeActive()` will change the active staircase if our conditions are true.
 
 Now the procedure is the same as with one staircase: we call the next value of the updated active staircase:
 
@@ -220,7 +206,7 @@ sound.frequency.value = stair.getLast('deltaF');
 These parameters can be used to instanciate `Staircase()`:
 
 - `firstVal`: the first value of the variable.
-- `down`: how many good answers are required to match one bad answer. For instance, if `down=2` the value will decrease (or increase according to the direction of the difficulty, see parameter `direction`) of an amount `x` after 2 good answers and will increase of the same amount `x` for one bad answer. This corresponds to an 1-up 2-down procedure.
+- `down`: how many good answers are required to match one bad answer. For instance, if `down=2` the value will decrease (or increase according to the direction of the difficulty, see parameter `direction`) of an amount `x` after 2 good answers and will increase of the same amount `x` for one bad answer. This corresponds to a 1-up 2-down procedure.
 - `factor`: this is the value of the multiplicator used to change the variable.
 - `direction`: tells if a good answer is associated with a decrease (`direction=-1`) or an increase (`direction=1`) of the value. The default behaviour is a decrease of the value when a good answer is provided (like for frequency thresholds for example).
 - `limits`: define the lower and upper values that can be used. When reached, the value will stay to the bound until there is an opposite answer.
@@ -256,7 +242,7 @@ In addition, the variable `sameStairCount` is incremented each time value is cha
 
 ### `changeActive()`
 
-Reset the `sameStairCount` to 0. Randomly choose another staircase to use (the last active staircase can't be choose again).
+Reset the `sameStairCount` to 0. Randomly choose another staircase to use (the last active staircase can't be choosen again).
 
 ### `getActive()`
 
@@ -300,5 +286,5 @@ Return the `lock` property of `stair`.
 
 # To do
 
-- update doc according to samestaircount (on a staircase basis)
+- update doc with example for the `lock` methods
 - fix 1-up n-down for `add` operation....

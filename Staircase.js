@@ -1,4 +1,4 @@
-function Staircase(stairs, opts) {
+function Staircase(stairs) {
   this.stairs = {};
   for (var i in stairs) {
     this.stairs[i] = stairs[i];
