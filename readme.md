@@ -89,6 +89,16 @@ stair.get('deltaF');
 
 The x-up y-down procedure can be implemented in two modes. With the `wait` mode, we will wait `y` good answers to increase difficulty and `x` answers to decrease difficulty.
 
+```js
+var stair = new Staircase({
+  deltaF: {
+    ...
+    wait: true,
+    ...
+  }
+});
+```
+
 ### `wait` mode
 
 ```javascript
