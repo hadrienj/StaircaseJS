@@ -2,98 +2,210 @@ function Staircase(stairs) {
   this.stairs = {};
   for (var i in stairs) {
     this.stairs[i] = stairs[i];
+    this.stairs[i].firstVal = stairs[i].firstVal;
+    this.stairs[i].down = stairs[i].down;
+    this.stairs[i].up = stairs[i].up || 1;
+    this.stairs[i].factor = stairs[i].factor;
+    this.stairs[i].direction = stairs[i].direction;
+    this.stairs[i].limits = stairs[i].limits;
+    this.stairs[i].operation = stairs[i].operation;
+    this.stairs[i].wait = stairs[i].wait || false;
+    this.stairs[i].sameStairMax = stairs[i].sameStairMax;
     this.stairs[i].name = i;
-    this.stairs[i].val = [this.stairs[i].firstVal];
-    this.stairs[i].active = false;
-    this.stairs[i].limitReached = false;
-    this.stairs[i].countSuccGood = 0;
-    this.stairs[i].sameStairCount = 0;
+    this.stairs[i].val = stairs[i].val || [this.stairs[i].firstVal];
+    this.stairs[i].active = stairs[i].active || false;
+    this.stairs[i].limitReached = stairs[i].limitReached || false;
+    this.stairs[i].successiveGood = stairs[i].successiveGood || 0;
+    this.stairs[i].successiveBad = stairs[i].successiveBad || 0;
+    this.stairs[i].sameStairCount = stairs[i].sameStairCount || 0;
+  }
+  this.tasks = {
+    easier: {
+      add: {
+        noWait: {
+          '1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            return stair.val[stair.val.length-1]-stair.factor*(stair.factor/stair.up);
+          },
+          '-1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            return stair.val[stair.val.length-1]+stair.factor*(stair.factor/stair.up);
+          },
+        },
+        wait: {
+          '1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            if (stair.successiveBad>=stair.up) {
+              // change value only if sufficient successive good values
+              return stair.val[stair.val.length-1]-stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+          '-1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            if (stair.successiveBad>=stair.up) {
+              // change value only if sufficient successive good values
+              return stair.val[stair.val.length-1]+stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+        }
+      },
+      multiply: {
+        noWait: {
+          '1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            return stair.val[stair.val.length-1] /
+              (Math.pow(stair.factor, stair.down/stair.up));
+          },
+          '-1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            return stair.val[stair.val.length-1] * stair.factor;
+          },
+        },
+        wait: {
+          '1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            if (stair.successiveBad>=stair.up) {
+              // change value only if sufficient successive good values
+              return stair.val[stair.val.length-1]/stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+          '-1': function(stair) {
+            stair.successiveGood = 0;
+            stair.successiveBad++;
+            if (stair.successiveBad>=stair.up) {
+              // change value only if sufficient successive good values
+              return stair.val[stair.val.length-1]*stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+        }
+      },
+    },
+    harder: {
+      add: {
+        wait: {
+          '1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            if (stair.successiveGood>=stair.down) {
+              return stair.val[stair.val.length-1]+stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+          '-1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            if (stair.successiveGood>=stair.down) {
+              return stair.val[stair.val.length-1]-stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+        },
+        noWait: {
+          '1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            return stair.val[stair.val.length-1]+stair.factor*(stair.factor/stair.down);
+          },
+          '-1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            return stair.val[stair.val.length-1]-stair.factor*(stair.factor/stair.down);
+          },
+        },
+      },
+      multiply: {
+        wait: {
+          '1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            if (stair.successiveGood>=stair.down) {
+              // change value only if sufficient successive good values
+              return stair.val[stair.val.length-1]*stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+          '-1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            if (stair.successiveGood>=stair.down) {
+              // change value only if sufficient successive good values
+              return stair.val[stair.val.length-1]/stair.factor;
+            } else {
+              return stair.val[stair.val.length-1];
+            }
+          },
+        },
+        noWait: {
+          '1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            return stair.val[stair.val.length-1] * stair.factor;
+          },
+          '-1': function(stair) {
+            stair.sameStairCount++;
+            stair.successiveGood++;
+            stair.successiveBad = 0;
+            return stair.val[stair.val.length-1] / (Math.pow(stair.factor, stair.up/stair.down));
+          },
+        }
+      }
+    }
   }
 };
-Staircase.prototype.next = function (goodAns) {
-  if (arguments.length===0) {
-    throw new Error("Argument is needed to compute the next value of the "+
-      "staircase")
-  }
-  // find the active stair
-  for (var i in this.stairs) {
-    if (this.stairs[i].active) {
-      var stair = this.stairs[i];
-    }
-  }
-  function decreaseVal() {
-    if (stair.operation === 'multiply') {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1] /
-      (Math.pow(stair.factor, 1/stair.down));
-    } else if (stair.operation === 'add') {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1] -
-      (Math.pow(stair.factor, 1/stair.down));
-    } else {
-      throw new Error("The option '"+stair.operation+"' is not recognized"+
-        "(takes only 'multiply' or 'add'.");
-    }
-    // check limits
-    if (stair.val[stair.val.length-1]<stair.limits[0]) {
-    	console.log('limits decr', stair.val[stair.val.length-1]);
+Staircase.prototype.choose = function(goodAns) {
+  var stair = this.getActive();
+  var ans = (goodAns)
+    ? 'harder'
+    : 'easier';
+  var wait = (stair.wait)
+    ? 'wait'
+    : 'noWait';
+  return this.tasks[ans][stair.operation][wait][stair.direction](stair);
+};
+Staircase.prototype.checkLimits = function() {
+  // check limits
+    if (stair.val[stair.val.length-1]<stair.val[stair.val.length-2] &&
+        stair.val[stair.val.length-1]<stair.limits[0]) {
       stair.val[stair.val.length-1] = stair.limits[0];
       stair.limitReached = true;
-    } else {
-    	console.log('no limits dec', stair.val[stair.val.length-1]);
-      stair.limitReached = false;
-    }
-  };
-  function increaseVal() {
-    if (stair.operation === 'multiply') {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1]*stair.factor;
-    } else if (stair.operation === 'add' && stair.countSuccGood>=stair.down) {
-      stair.val[stair.val.length] = stair.val[stair.val.length-1]+stair.factor;
-    } else {
-      throw new Error("The option '"+stair.operation+
-        "' is not recognized (takes" + " only 'multiply' or 'add'.");
-    }
-    // check limits
-    if (stair.val[stair.val.length-1]>stair.limits[1]) {
-    	console.log('limits inc', stair.val[stair.val.length-1]);
+    } else if (stair.val[stair.val.length-1]>stair.val[stair.val.length-2] &&
+        stair.val[stair.val.length-1]>stair.limits[1]) {
       stair.val[stair.val.length-1] = stair.limits[1];
       stair.limitReached = true;
     } else {
-    	console.log('no limits inc', stair.val[stair.val.length-1]);
       stair.limitReached = false;
     }
-  };
-  if (goodAns && stair.direction===-1) {
-    // right answer and number of last right answers > down
-    stair.countSuccGood++;
-    if (stair.operation === 'add' && stair.countSuccGood<stair.down) {
-    	console.log('not enough good!');
-    	console.log('same stair', stair.sameStairCount);
-    	console.log('count succes', stair.countSuccGood);
-    } else {
-    	console.log('good, will decrease');
-    	stair.sameStairCount++;
-    	decreaseVal();
-    }
-  } else if (goodAns && stair.direction===1) {
-    // right answer and number of last right answers > down
-    stair.countSuccGood++;
-    if (stair.operation === 'add' && stair.countSuccGood<stair.down) {
-    	console.log('not enough good!');
-    	console.log('same stair', stair.sameStairCount);
-    	console.log('count succes', stair.countSuccGood);
-    } else {
-    	console.log('good, will increase');
-    	stair.sameStairCount++;
-    	increaseVal();
-    }
-  } else if (!goodAns && stair.direction===-1) {
-    // answer is wrong
-    console.log('not good, will increase');
-    increaseVal();
-  } else if (!goodAns && stair.direction===1) {
-    // answer is wrong
-    console.log('not good, will decrease');
-    decreaseVal();
-  }
+};
+Staircase.prototype.next = function (goodAns) {
+  checkErr.ARG('next', arguments, 1);
+  // find the active stair
+  var stair = this.getActive();
+  stair.val[stair.val.length] = this.choose(goodAns);
   return stair.val[stair.val.length-1];
 };
 Staircase.prototype.init = function () {
@@ -111,6 +223,7 @@ Staircase.prototype.init = function () {
   // choose one stair to activate
   var rand = randInt(0, choices.length-1);
   this.stairs[choices[rand]].active = true;
+  return this;
 };
 Staircase.prototype.changeActive = function () {
   var possibleStairs = [];
@@ -120,7 +233,7 @@ Staircase.prototype.changeActive = function () {
     } else if (this.stairs[i].active) {
       this.stairs[i].active = false;
       this.stairs[i].sameStairCount = 0;
-      this.stairs[i].countSuccGood = 0;
+      this.stairs[i].successiveGood = 0;
       this.stairs[i].limitReached = false;
     }
   }
@@ -128,12 +241,18 @@ Staircase.prototype.changeActive = function () {
   this.stairs[possibleStairs[rand]].active = true;
 };
 Staircase.prototype.setsameStairMax = function (max, stair) {
+  checkErr.ARG('setsameStairMax', arguments, 2);
+  checkErr.UNDEFINED(this.stairs, stair);
   return this.stairs[stair].sameStairMax = max;
 };
 Staircase.prototype.get = function (stair) {
+  checkErr.ARG('get', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   return this.stairs[stair].val;
 };
 Staircase.prototype.getLast = function (stair) {
+  checkErr.ARG('getLast', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   return this.stairs[stair].val[this.stairs[stair].val.length-1];
 };
 Staircase.prototype.getActive = function () {
@@ -142,17 +261,27 @@ Staircase.prototype.getActive = function () {
       return this.stairs[i];
     }
   }
+  throw new Error("There is no active staircase. Consider initialize before"+
+    " using 'next' method");
 };
 Staircase.prototype.activate = function (stair) {
+  checkErr.ARG('activate', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].active = true;
 };
 Staircase.prototype.deactivate = function (stair) {
+  checkErr.ARG('deactivate', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].active = false;
 };
 Staircase.prototype.isActive = function (stair) {
+  checkErr.ARG('isActive', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   return this.stairs[stair].active;
 };
 Staircase.prototype.active = function (stair) {
+  checkErr.ARG('active', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   for (var i in this.stairs) {
     if (this.stairs[i].active) {
       return i;
@@ -160,16 +289,37 @@ Staircase.prototype.active = function (stair) {
   }
 };
 Staircase.prototype.lock = function (stair) {
+  checkErr.ARG('lock', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].lock = true;
 };
 Staircase.prototype.unlock = function (stair) {
+  checkErr.ARG('unlock', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].lock = false;
 };
 Staircase.prototype.isLocked = function (stair) {
+  checkErr.ARG('isLocked', arguments, 1);
+  checkErr.UNDEFINED(this.stairs, stair);
   return this.stairs[stair].lock;
 };
 Staircase.prototype.setVal = function (stair, val) {
+  checkErr.ARG('setVal', arguments, 2);
+  checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].val[this.stairs[stair].val.length] = val;
+};
+
+var CheckErr = function() {};
+CheckErr.prototype.UNDEFINED = function(thisStairs, stair) {
+  if (thisStairs[stair]===undefined) {
+    throw new Error("Unable to find the staircase '"+stair+"'")
+  }
+};
+CheckErr.prototype.ARG = function(func, arg, argNum) {
+  if (arg.length===0) {
+    throw new Error("Wrong number of arguments for the method '"+func+"'"
+      +". Required: "+argNum);
+  }
 };
 
 // Returns a random integer between min (inclusive) and max (inclusive)
