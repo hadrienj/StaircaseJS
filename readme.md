@@ -9,7 +9,7 @@ The StaircaseJS module can be used to manage the value of a stimulus implementin
 
 # Usage
 
-Create a new staircase will allow you to store and track the values of the stimulus. The parameters of the staircase (equation used to change the value, 1-up n-down etc.) has to be set when the contructor is instanciated.
+Create a new staircase will allow you to store and track the values of the stimulus. The parameters of the staircase (equation used to change the value, x-up y-down etc.) has to be set when the contructor is instanciated.
 
 ## Instanciation
 
@@ -85,13 +85,32 @@ stair.get('deltaF');
 ```
 
 
-## Implementation of the 1-up n-down procedure
+## Implementation of the x-up y-down procedure
 
-These equations are used to implement the 1-up n-down procedure:
+The x-up y-down procedure can be implemented in two modes. With the `wait` mode, we will wait `y` good answers to increase difficulty and `x` answers to decrease difficulty.
+
+### `wait` mode
+
+```javascript
+// example with a 1-up 2-down procedure and factor = 1.5
+// first value = 100
+// then good answer
+newValue = 100;
+// then good answer again
+newValue = 100/1.5;
+// = 66.66
+// then wrong answer
+newValue = 66.66*1.5;
+// = 100 (first value)
+```
+
+### `noWait` mode
+
+These equations are used to implement the x-up y-down procedure:
 
 - Decreasing (wrong answer): `newValue = oldValue / (Math.pow(factor, 1/down));` and increasing (right answer): `newValue = oldValue * factor;`.
 
-Instead of keeping the same value `n` times and then change the value by `factor`, we change the value each time:
+Instead of keeping the same value `y` times and then change the value by `factor`, we change the value each time:
 
 ```javascript
 // first value = 100
@@ -287,4 +306,4 @@ Return the `lock` property of `stair`.
 # To do
 
 - update doc with example for the `lock` methods
-- fix 1-up n-down for `add` operation....
+- fix x-up y-down for `add` operation....
