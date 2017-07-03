@@ -15,10 +15,12 @@ function Staircase(stairs) {
     this.stairs[i] = stairs[i];
     this.stairs[i].name = i;
     // Check minimum requirements: first value and factor
-    if (typeof stairs[i].firstVal=="undefined")
+    if (typeof stairs[i].firstVal=="undefined" && typeof stairs[i].limits != "object")
         throw new Error("No firstVal specified for "+i);
-    else
+    else if(stairs[i].hasOwnProperty("firstVal"))
         this.stairs[i].firstVal = stairs[i].firstVal;
+    else
+        this.stairs[i].firstVal = stairs[i].limits[0]+((stairs[i].limits[1]-stairs[i].limits[0])/2); // use the midpoint between limits if limits are specified and firstVal is not
     if (typeof stairs[i].factor=="undefined")
         throw new Error("No factor specified for "+i);
     else
@@ -31,7 +33,7 @@ function Staircase(stairs) {
     this.stairs[i].downUpRatio = stairs[i].downUpRatio || 1; // delta-Down/delta-Up (with the x-up,y-down rule controls the convergence point). Not implemented for 'multiply' mode
     this.stairs[i].direction = stairs[i].direction || 1; // -1: lower val is easier | 1: lower val is harder
     this.stairs[i].reversalLimit = stairs[i].reversalLimit || 0; // Maximum reversals before settling on the final value. 0: infinite
-    this.stairs[i].limits = stairs[i].limits || [stairs[i].firstVal-10*stairs[i].factor, stairs[i].firstVal+10*stairs[i].factor];
+    this.stairs[i].limits = stairs[i].limits || false;
     this.stairs[i].operation = stairs[i].operation || 'add'; // Modes: 'add' | 'multiply'
     this.stairs[i].wait = stairs[i].wait || (this.stairs[i].down!=this.stairs[i].up); // By default we wait if up and down are different
     this.stairs[i].val = stairs[i].val || [this.stairs[i].firstVal]; // If necessary a history of values can be inserted using val
@@ -43,17 +45,21 @@ function Staircase(stairs) {
     this.stairs[i].successiveBad = stairs[i].successiveBad || 0;
     this.stairs[i].sameStairCount = stairs[i].sameStairCount || 0;
     this.stairs[i].startingExplorationScale = stairs[i].startingExplorationScale || 1; // Scale factor by this much before the first reversal
+    this.stairs[i].verbosity = stairs[i].verbosity || 0; // Logging verbosity: 0-off; 1-on
+    if(this.stairs[i].verbosity>0) {
+        console.log("Built staircase '"+this.stairs[i].name+"' ("+this.stairs[i].operation+"): Start="+this.stairs[i].firstVal+"; StepSize="+this.stairs[i].factor+"; Limits=["+this.stairs[i].limits[0]+", "+this.stairs[i].limits[1]+"]");
+    }
   }
   this.tasks = {
     easier: { // easier is 'up'
       add: {
         noWait: {
-          '1': function(stair) {
+          '1': function(stair) { // Up is numerically more positive/less negative
             stair.successiveGood = 0;
             stair.successiveBad++;
             return stair.val[stair.val.length-1]-stair.factor*(stair.factor/stair.up);
           },
-          '-1': function(stair) {
+          '-1': function(stair) { // Up is numerically less positive/more negative
             stair.successiveGood = 0;
             stair.successiveBad++;
             return stair.val[stair.val.length-1]+stair.factor*(stair.factor/stair.up);
@@ -212,7 +218,10 @@ Staircase.prototype.choose = function(goodAns) {
   var wait = (stair.wait)
     ? 'wait'
     : 'noWait';
-  return this.tasks[ans][stair.operation][wait][stair.direction](stair);
+  if(stair.verbosity>0)
+    console.log("Staircase '"+stair.name+"' ("+stair.operation+"): making test "+ans+", "+wait+" mode.");
+  var out = this.tasks[ans][stair.operation][wait][stair.direction](stair);
+  return out;
 };
 Staircase.prototype.checkLimits = function(stair) {
   this.checkErr.ARG('checkLimits', arguments, 1);
@@ -245,7 +254,7 @@ Staircase.prototype.init = function () {
   // deactivate all other staircases
   for (var i in this.stairs) {
     if (this.stairs[i].active) {
-      this.stairs[i].active = false;
+      this.deactivate(i);
     }
     // choose among unlock staircases only
     if (!this.stairs[i].lock) {
@@ -254,7 +263,7 @@ Staircase.prototype.init = function () {
   }
   // choose one stair to activate
   var rand = this.randInt(0, choices.length-1);
-  this.stairs[choices[rand]].active = true;
+  this.activate(choices[rand]);
   return this;
 };
 Staircase.prototype.changeActive = function () {
@@ -263,14 +272,11 @@ Staircase.prototype.changeActive = function () {
     if (!this.stairs[i].active && !this.stairs[i].lock) {
       possibleStairs[possibleStairs.length] = i;
     } else if (this.stairs[i].active) {
-      this.stairs[i].active = false;
-      this.stairs[i].sameStairCount = 0;
-      this.stairs[i].successiveGood = 0;
-      this.stairs[i].limitReached = false;
+        this.deactivate(i);
     }
   }
   var rand = this.randInt(0, possibleStairs.length-1);
-  this.stairs[possibleStairs[rand]].active = true;
+  this.activate(possibleStairs[rand]);
 };
 Staircase.prototype.setsameStairMax = function (max, stair) {
   this.checkErr.ARG('setsameStairMax', arguments, 2);
@@ -300,11 +306,18 @@ Staircase.prototype.activate = function (stair) {
   this.checkErr.ARG('activate', arguments, 1);
   this.checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].active = true;
+  if(this.stairs[stair].verbosity>0)
+    console.log("Staircase "+this.stairs[stair].name+" now active");
 };
 Staircase.prototype.deactivate = function (stair) {
-  this.checkErr.ARG('deactivate', arguments, 1);
-  this.checkErr.UNDEFINED(this.stairs, stair);
-  this.stairs[stair].active = false;
+    this.checkErr.ARG('deactivate', arguments, 1);
+    this.checkErr.UNDEFINED(this.stairs, stair);
+    this.stairs[stair].active = false;
+    this.stairs[stair].sameStairCount = 0;
+    this.stairs[stair].successiveGood = 0;
+    this.stairs[stair].limitReached = false;
+    if(this.stairs[stair].verbosity>0)
+        console.log("Staircase "+this.stairs[stair].name+" deactivated");
 };
 Staircase.prototype.isActive = function (stair) {
   this.checkErr.ARG('isActive', arguments, 1);
@@ -349,7 +362,7 @@ Staircase.prototype.getReversals = function (stair) {
     for(var i=1;i<this.stairs[stair].val.length;i++) {
         if((direction==1 && this.stairs[stair].val[i]>this.stairs[stair].val[i-1]) ||
             (direction==-1 && this.stairs[stair].val[i]<this.stairs[stair].val[i-1])) {
-            reversals[reversals.length] = this.stairs[stair].val[i-1];
+            reversals[reversals.length] = this.stairs[stair].val[i-1]; // record reversal
             direction = direction*-1; // reverse search direction
         }
     }
