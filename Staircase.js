@@ -14,22 +14,22 @@ function Staircase(stairs) {
   for (var i in stairs) {
     this.stairs[i] = stairs[i];
     this.stairs[i].name = i;
-    // Check minimum requirements: first value and factor
+    // Check minimum requirements: first value and stepSize
     if (typeof stairs[i].firstVal=="undefined" && typeof stairs[i].limits != "object")
         throw new Error("No firstVal specified for "+i);
     else if(stairs[i].hasOwnProperty("firstVal"))
         this.stairs[i].firstVal = stairs[i].firstVal;
     else
         this.stairs[i].firstVal = stairs[i].limits[0]+((stairs[i].limits[1]-stairs[i].limits[0])/2); // use the midpoint between limits if limits are specified and firstVal is not
-    if (typeof stairs[i].factor=="undefined")
-        throw new Error("No factor specified for "+i);
+    if (typeof stairs[i].stepSize=="undefined")
+        throw new Error("No stepSize specified for "+i);
     else
-        this.stairs[i].factor = stairs[i].factor;
+        this.stairs[i].stepSize = stairs[i].stepSize;
     // Everything else we can derive sensible defaults for on the basis of
     // first value and step size if not specified
     // NOTE: easier is always 'up', even if it is a numerical decrease in val
-    this.stairs[i].down = stairs[i].down || 1; // N-down in 'wait' mode, LEGACY: scales factor when doing down-steps (getting harder) in 'no-wait' mode
-    this.stairs[i].up = stairs[i].up || 1; // N-up in 'wait' mode, LEGACY: scale factor when doing up-steps (getting easier) in 'no-wait' mode
+    this.stairs[i].down = stairs[i].down || 1; // N-down in 'wait' mode, LEGACY: scales stepSize when doing down-steps (getting harder) in 'no-wait' mode
+    this.stairs[i].up = stairs[i].up || 1; // N-up in 'wait' mode, LEGACY: scale stepSize when doing up-steps (getting easier) in 'no-wait' mode
     this.stairs[i].downUpRatio = stairs[i].downUpRatio || 1; // delta-Down/delta-Up (with the x-up,y-down rule controls the convergence point). Not implemented for 'multiply' mode
     this.stairs[i].direction = stairs[i].direction || 1; // -1: lower val is easier | 1: lower val is harder
     this.stairs[i].reversalLimit = stairs[i].reversalLimit || 0; // Maximum reversals before settling on the final value. 0: infinite
@@ -44,10 +44,10 @@ function Staircase(stairs) {
     this.stairs[i].successiveGood = stairs[i].successiveGood || 0;
     this.stairs[i].successiveBad = stairs[i].successiveBad || 0;
     this.stairs[i].sameStairCount = stairs[i].sameStairCount || 0;
-    this.stairs[i].startingExplorationScale = stairs[i].startingExplorationScale || 1; // Scale factor by this much before the first reversal
+    this.stairs[i].startingExplorationScale = stairs[i].startingExplorationScale || 1; // Scale stepSize by this much before the first reversal
     this.stairs[i].verbosity = stairs[i].verbosity || 0; // Logging verbosity: 0-off; 1-on
     if(this.stairs[i].verbosity>0) {
-        console.log("Built staircase '"+this.stairs[i].name+"' ("+this.stairs[i].operation+"): Start="+this.stairs[i].firstVal+"; StepSize="+this.stairs[i].factor+"; Limits=["+this.stairs[i].limits[0]+", "+this.stairs[i].limits[1]+"]");
+        console.log("Built staircase '"+this.stairs[i].name+"' ("+this.stairs[i].operation+"): Start="+this.stairs[i].firstVal+"; StepSize="+this.stairs[i].stepSize+"; Limits=["+this.stairs[i].limits[0]+", "+this.stairs[i].limits[1]+"]");
     }
   }
   this.tasks = {
@@ -57,12 +57,12 @@ function Staircase(stairs) {
           '1': function(stair) { // Up is numerically more positive/less negative
             stair.successiveGood = 0;
             stair.successiveBad++;
-            return stair.val[stair.val.length-1]-stair.factor*(stair.factor/stair.up);
+            return stair.val[stair.val.length-1]-stair.stepSize*(stair.stepSize/stair.up);
           },
           '-1': function(stair) { // Up is numerically less positive/more negative
             stair.successiveGood = 0;
             stair.successiveBad++;
-            return stair.val[stair.val.length-1]+stair.factor*(stair.factor/stair.up);
+            return stair.val[stair.val.length-1]+stair.stepSize*(stair.stepSize/stair.up);
           },
         },
         wait: {
@@ -71,7 +71,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]-stair.factor;
+              return stair.val[stair.val.length-1]-stair.stepSize;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -81,7 +81,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]+stair.factor;
+              return stair.val[stair.val.length-1]+stair.stepSize;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -94,12 +94,12 @@ function Staircase(stairs) {
             stair.successiveGood = 0;
             stair.successiveBad++;
             return stair.val[stair.val.length-1] /
-              (Math.pow(stair.factor, stair.down/stair.up));
+              (Math.pow(stair.stepSize, stair.down/stair.up));
           },
           '-1': function(stair) {
             stair.successiveGood = 0;
             stair.successiveBad++;
-            return stair.val[stair.val.length-1] * stair.factor;
+            return stair.val[stair.val.length-1] * stair.stepSize;
           },
         },
         wait: {
@@ -108,7 +108,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]/stair.factor;
+              return stair.val[stair.val.length-1]/stair.stepSize;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -118,7 +118,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]*stair.factor;
+              return stair.val[stair.val.length-1]*stair.stepSize;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -134,7 +134,7 @@ function Staircase(stairs) {
             stair.successiveGood++;
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
-              return stair.val[stair.val.length-1]+stair.factor*stair.downUpRatio*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]+stair.stepSize*stair.downUpRatio*stair.startingExplorationScale;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -144,7 +144,7 @@ function Staircase(stairs) {
             stair.successiveGood++;
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
-              return stair.val[stair.val.length-1]-stair.factor*stair.downUpRatio*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]-stair.stepSize*stair.downUpRatio*stair.startingExplorationScale;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -155,13 +155,13 @@ function Staircase(stairs) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1]+stair.factor*(stair.factor/stair.down)*stair.downUpRatio*stair.startingExplorationScale; // stair.factor/stair.down and stair.downUpRatio do the same thing but both are present for legacy reasons
+            return stair.val[stair.val.length-1]+stair.stepSize*(stair.stepSize/stair.down)*stair.downUpRatio*stair.startingExplorationScale; // stair.stepSize/stair.down and stair.downUpRatio do the same thing but both are present for legacy reasons
           },
           '-1': function(stair) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1]-stair.factor*(stair.factor/stair.down)*stair.downUpRatio*stair.startingExplorationScale; // stair.factor/stair.down and stair.downUpRatio do the same thing but both are present for legacy reasons
+            return stair.val[stair.val.length-1]-stair.stepSize*(stair.stepSize/stair.down)*stair.downUpRatio*stair.startingExplorationScale; // stair.stepSize/stair.down and stair.downUpRatio do the same thing but both are present for legacy reasons
           },
         },
       },
@@ -173,7 +173,7 @@ function Staircase(stairs) {
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]*stair.factor*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]*stair.stepSize*stair.startingExplorationScale;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -184,7 +184,7 @@ function Staircase(stairs) {
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]/stair.factor*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]/stair.stepSize*stair.startingExplorationScale;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -195,13 +195,13 @@ function Staircase(stairs) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1] * stair.factor*stair.startingExplorationScale;
+            return stair.val[stair.val.length-1] * stair.stepSize*stair.startingExplorationScale;
           },
           '-1': function(stair) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1] / (Math.pow(stair.factor*stair.startingExplorationScale, stair.up/stair.down));
+            return stair.val[stair.val.length-1] / (Math.pow(stair.stepSize*stair.startingExplorationScale, stair.up/stair.down));
           },
         }
       }
@@ -307,7 +307,7 @@ Staircase.prototype.activate = function (stair) {
   this.checkErr.UNDEFINED(this.stairs, stair);
   this.stairs[stair].active = true;
   if(this.stairs[stair].verbosity>0)
-    console.log("Staircase "+this.stairs[stair].name+" now active");
+    console.log("Staircase '"+this.stairs[stair].name+"' now active");
 };
 Staircase.prototype.deactivate = function (stair) {
     this.checkErr.ARG('deactivate', arguments, 1);
@@ -317,7 +317,7 @@ Staircase.prototype.deactivate = function (stair) {
     this.stairs[stair].successiveGood = 0;
     this.stairs[stair].limitReached = false;
     if(this.stairs[stair].verbosity>0)
-        console.log("Staircase "+this.stairs[stair].name+" deactivated");
+        console.log("Staircase '"+this.stairs[stair].name+"' deactivated");
 };
 Staircase.prototype.isActive = function (stair) {
   this.checkErr.ARG('isActive', arguments, 1);
@@ -380,7 +380,7 @@ Staircase.prototype.getFinalVal = function (stair) {
     this.checkErr.UNDEFINED(this.stairs, stair);
     var reversals = this.getReversals(stair);
     if(!reversals.length)
-        throw new Error(stair+": Not enough reversals to calculate final value.");
+        throw new Error("Staircase '"+this.stairs[stair].name+"': Not enough reversals to calculate final value.");
     var sum = 0;
     for(var i=0;i<reversals.length;i++)
         sum = sum + reversals[i];
