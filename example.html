@@ -35,11 +35,9 @@
 
   <script>
 
-    /* Metacognition Dot descrimination task
-     * Test design: Flemming et al. (forthcoming)
-     * Coding implementation: Matt Jaquiery - 2017
-    * Images used in accordance with their licenses
-    * Arrows from: https://pixabay.com/p-1646212/?no_redirect
+    /*
+    StaircaseJS example
+        * Matt Jaquiery - 2017
     TODO:
     */
 
@@ -62,14 +60,15 @@
         });
         stair = new Staircase({
             ratio: {
-                firstVal: 60,
-                down: 2,
+                firstVal: Math.round(maxDots*0.8),
+                down: 2, // down is the number of correct answers required before we increase the difficulty
+                up: 1, // up is the number of incorrect answers before we decrease the difficulty
                 stepSize: 3, // how much we in/decrease by
-                startingExplorationScale: 3, // explore more aggressively to begin with
+                startingExplorationScale: 5, // explore more aggressively to begin with
                 downUpRatio: 0.5488, // Converge to 80.35% correct ('downUpRatio' and 'down' affect this)
                 limits: [(maxDots/2)+1, maxDots], // don't allow equal ratio
-                direction: -1,
-                reversalLimit: 2, // How many reversals to do before stopping
+                direction: -1, // -1 indicates that easier = greater values; 1 would indicate easier = lower values
+                reversalLimit: 5, // How many reversals to do before stopping
                 verbosity: 1, // Enable logging for debugging
             }
         });
@@ -245,26 +244,6 @@
         drawChart(data, 'Graph');
     }
   </script>
-    <!-- Google Charts stuff -->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-      <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-
-        function drawChart(array,divID) {
-          var data = google.visualization.arrayToDataTable(array);
-
-          var options = {
-            legend: { position: 'bottom' },
-            height: 500,
-            //width: data.getNumberOfRows() * 15
-          };
-
-          var chart = new google.visualization.LineChart(document.getElementById(divID));
-
-          chart.draw(data, options);
-        }
-    </script>
-  <!--<link rel="stylesheet" type="text/css" href="colour_style.css">-->
     <style>
 
         area {

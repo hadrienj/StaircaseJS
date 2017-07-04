@@ -1,13 +1,6 @@
 /*
-COMPLETE:
-    1) Fix checkErr by moving it inside Staircase function
-    2) Allow for different up/down step sizes
-    3) Add defaults for most values
-    4) Tidy randInt into Staircase
-    5) Add larger jumps for initial space exploration
-
 TODO:
-    6) Improve documentation?
+    * Improve documentation?
 */
 function Staircase(stairs) {
   this.stairs = {};
@@ -41,7 +34,7 @@ function Staircase(stairs) {
     this.stairs[i].sameStairMax = stairs[i].sameStairMax || -1; // For external use only, see readme
     this.stairs[i].limitReached = stairs[i].limitReached || false; // External use only
     this.stairs[i].reversals = stairs[i].reversals || 0; // External use only
-    this.stairs[i].successiveGood = stairs[i].successiveGood || 0;
+    this.stairs[i].successiveGood = stairs[i].successiveGood || this.stairs[i].down; // If successiveGood isn't specified then start such that difficulty will increase from 1st trial
     this.stairs[i].successiveBad = stairs[i].successiveBad || 0;
     this.stairs[i].sameStairCount = stairs[i].sameStairCount || 0;
     this.stairs[i].startingExplorationScale = stairs[i].startingExplorationScale || 1; // Scale stepSize by this much before the first reversal
