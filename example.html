@@ -63,9 +63,8 @@
                 firstVal: Math.round(maxDots*0.8),
                 down: 2, // down is the number of correct answers required before we increase the difficulty
                 up: 1, // up is the number of incorrect answers before we decrease the difficulty
-                stepSize: 3, // how much we in/decrease by
-                startingExplorationScale: 5, // explore more aggressively to begin with
-                downUpRatio: 0.5488, // Converge to 80.35% correct ('downUpRatio' and 'down' affect this)
+                stepSizeDown: 3, // how much we in/decrease by
+                stepSizeUp: 3 * 0.5488, // Converge to 80.35% correct ('downUpRatio' and 'down' affect this)
                 limits: [(maxDots/2)+1, maxDots], // don't allow equal ratio
                 direction: -1, // -1 indicates that easier = greater values; 1 would indicate easier = lower values
                 reversalLimit: 5, // How many reversals to do before stopping

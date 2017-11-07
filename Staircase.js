@@ -1,43 +1,40 @@
-/*
-TODO:
-    * Improve documentation?
-*/
 function Staircase(stairs) {
   this.stairs = {};
   for (var i in stairs) {
     this.stairs[i] = stairs[i];
     this.stairs[i].name = i;
     // Check minimum requirements: first value and stepSize
-    if (typeof stairs[i].firstVal=="undefined" && typeof stairs[i].limits != "object")
+    if (typeof stairs[i].firstVal==="undefined") {
         throw new Error("No firstVal specified for "+i);
-    else if(stairs[i].hasOwnProperty("firstVal"))
-        this.stairs[i].firstVal = stairs[i].firstVal;
-    else
-        this.stairs[i].firstVal = stairs[i].limits[0]+((stairs[i].limits[1]-stairs[i].limits[0])/2); // use the midpoint between limits if limits are specified and firstVal is not
-    if (typeof stairs[i].stepSize=="undefined")
-        throw new Error("No stepSize specified for "+i);
-    else
-        this.stairs[i].stepSize = stairs[i].stepSize;
-    // Everything else we can derive sensible defaults for on the basis of
-    // first value and step size if not specified
+    } else if (stairs[i].hasOwnProperty("firstVal")) {
+      this.stairs[i].firstVal = stairs[i].firstVal;
+    }
+    if (typeof stairs[i].stepSizeDown==="undefined") {
+      throw new Error("No stepSizeDown specified for "+i);
+    } else {
+      this.stairs[i].stepSizeDown = stairs[i].stepSizeDown;
+    }
+    if (typeof stairs[i].stepSizeUp==="undefined") {
+      throw new Error("No stepSizeUp specified for "+i);
+    } else {
+      this.stairs[i].stepSizeUp = stairs[i].stepSizeUp;
+    }
     // NOTE: easier is always 'up', even if it is a numerical decrease in val
     this.stairs[i].down = stairs[i].down || 1; // N-down in 'wait' mode, LEGACY: scales stepSize when doing down-steps (getting harder) in 'no-wait' mode
     this.stairs[i].up = stairs[i].up || 1; // N-up in 'wait' mode, LEGACY: scale stepSize when doing up-steps (getting easier) in 'no-wait' mode
-    this.stairs[i].downUpRatio = stairs[i].downUpRatio || 1; // delta-Down/delta-Up (with the x-up,y-down rule controls the convergence point). Not implemented for 'multiply' mode
-    this.stairs[i].direction = stairs[i].direction || 1; // -1: lower val is easier | 1: lower val is harder
+    this.stairs[i].direction = stairs[i].direction || -1; // -1: lower val is harder | 1: lower val is easier
     this.stairs[i].reversalLimit = stairs[i].reversalLimit || 0; // Maximum reversals before settling on the final value. 0: infinite
     this.stairs[i].limits = stairs[i].limits || false;
     this.stairs[i].operation = stairs[i].operation || 'add'; // Modes: 'add' | 'multiply'
-    this.stairs[i].wait = stairs[i].wait || (this.stairs[i].down!=this.stairs[i].up); // By default we wait if up and down are different
+    this.stairs[i].wait = stairs[i].wait || 1;
     this.stairs[i].val = stairs[i].val || [this.stairs[i].firstVal]; // If necessary a history of values can be inserted using val
     this.stairs[i].active = stairs[i].active || (false); // A random staircase is activated using Staircase.init() so they all start disabled by default
     this.stairs[i].sameStairMax = stairs[i].sameStairMax || -1; // For external use only, see readme
     this.stairs[i].limitReached = stairs[i].limitReached || false; // External use only
     this.stairs[i].reversals = stairs[i].reversals || 0; // External use only
-    this.stairs[i].successiveGood = stairs[i].successiveGood || this.stairs[i].down; // If successiveGood isn't specified then start such that difficulty will increase from 1st trial
+    this.stairs[i].successiveGood = stairs[i].successiveGood || 0;
     this.stairs[i].successiveBad = stairs[i].successiveBad || 0;
     this.stairs[i].sameStairCount = stairs[i].sameStairCount || 0;
-    this.stairs[i].startingExplorationScale = stairs[i].startingExplorationScale || 1; // Scale stepSize by this much before the first reversal
     this.stairs[i].verbosity = stairs[i].verbosity || 0; // Logging verbosity: 0-off; 1-on
     if(this.stairs[i].verbosity>0) {
         console.log("Built staircase '"+this.stairs[i].name+"' ("+this.stairs[i].operation+"): Start="+this.stairs[i].firstVal+"; StepSize="+this.stairs[i].stepSize+"; Limits=["+this.stairs[i].limits[0]+", "+this.stairs[i].limits[1]+"]");
@@ -47,15 +44,15 @@ function Staircase(stairs) {
     easier: { // easier is 'up'
       add: {
         noWait: {
-          '1': function(stair) { // Up is numerically more positive/less negative
+          '1': function(stair) {
             stair.successiveGood = 0;
             stair.successiveBad++;
-            return stair.val[stair.val.length-1]-stair.stepSize*(stair.stepSize/stair.up);
+            return stair.val[stair.val.length-1]-stair.stepSizeDown*(stair.stepSizeDown/stair.up);
           },
-          '-1': function(stair) { // Up is numerically less positive/more negative
+          '-1': function(stair) {
             stair.successiveGood = 0;
             stair.successiveBad++;
-            return stair.val[stair.val.length-1]+stair.stepSize*(stair.stepSize/stair.up);
+            return stair.val[stair.val.length-1]+stair.stepSizeUp*(stair.stepSizeUp/stair.up);
           },
         },
         wait: {
@@ -64,7 +61,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]-stair.stepSize;
+              return stair.val[stair.val.length-1]-stair.stepSizeDown;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -74,7 +71,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]+stair.stepSize;
+              return stair.val[stair.val.length-1]+stair.stepSizeUp;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -87,12 +84,12 @@ function Staircase(stairs) {
             stair.successiveGood = 0;
             stair.successiveBad++;
             return stair.val[stair.val.length-1] /
-              (Math.pow(stair.stepSize, stair.down/stair.up));
+              (Math.pow(stair.stepSizeDown, stair.down/stair.up));
           },
           '-1': function(stair) {
             stair.successiveGood = 0;
             stair.successiveBad++;
-            return stair.val[stair.val.length-1] * stair.stepSize;
+            return stair.val[stair.val.length-1] * stair.stepSizeUp;
           },
         },
         wait: {
@@ -101,7 +98,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]/stair.stepSize;
+              return stair.val[stair.val.length-1]/stair.stepSizeDown;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -111,7 +108,7 @@ function Staircase(stairs) {
             stair.successiveBad++;
             if (stair.successiveBad>=stair.up) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]*stair.stepSize;
+              return stair.val[stair.val.length-1]*stair.stepSizeUp;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -127,7 +124,7 @@ function Staircase(stairs) {
             stair.successiveGood++;
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
-              return stair.val[stair.val.length-1]+stair.stepSize*stair.downUpRatio*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]+stair.stepSizeUp;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -137,7 +134,7 @@ function Staircase(stairs) {
             stair.successiveGood++;
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
-              return stair.val[stair.val.length-1]-stair.stepSize*stair.downUpRatio*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]-stair.stepSizeDown;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -148,13 +145,13 @@ function Staircase(stairs) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1]+stair.stepSize*(stair.stepSize/stair.down)*stair.downUpRatio*stair.startingExplorationScale; // stair.stepSize/stair.down and stair.downUpRatio do the same thing but both are present for legacy reasons
+            return stair.val[stair.val.length-1]+stair.stepSizeUp*(stair.stepSizeUp/stair.down);
           },
           '-1': function(stair) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1]-stair.stepSize*(stair.stepSize/stair.down)*stair.downUpRatio*stair.startingExplorationScale; // stair.stepSize/stair.down and stair.downUpRatio do the same thing but both are present for legacy reasons
+            return stair.val[stair.val.length-1]-stair.stepSizeDown*(stair.stepSize/stair.down);
           },
         },
       },
@@ -166,7 +163,7 @@ function Staircase(stairs) {
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]*stair.stepSize*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]*stair.stepSizeUp;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -177,7 +174,7 @@ function Staircase(stairs) {
             stair.successiveBad = 0;
             if (stair.successiveGood>=stair.down) {
               // change value only if sufficient successive good values
-              return stair.val[stair.val.length-1]/stair.stepSize*stair.startingExplorationScale;
+              return stair.val[stair.val.length-1]/stair.stepSizeDown;
             } else {
               return stair.val[stair.val.length-1];
             }
@@ -188,13 +185,13 @@ function Staircase(stairs) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1] * stair.stepSize*stair.startingExplorationScale;
+            return stair.val[stair.val.length-1] * stair.stepSizeUp;
           },
           '-1': function(stair) {
             stair.sameStairCount++;
             stair.successiveGood++;
             stair.successiveBad = 0;
-            return stair.val[stair.val.length-1] / (Math.pow(stair.stepSize*stair.startingExplorationScale, stair.up/stair.down));
+            return stair.val[stair.val.length-1] / (Math.pow(stair.stepSizeDown, stair.up/stair.down));
           },
         }
       }
@@ -216,30 +213,27 @@ Staircase.prototype.choose = function(goodAns) {
   var out = this.tasks[ans][stair.operation][wait][stair.direction](stair);
   return out;
 };
-Staircase.prototype.checkLimits = function(stair) {
-  this.checkErr.ARG('checkLimits', arguments, 1);
-  this.checkErr.UNDEFINED(this.stairs, stair);
-    if(this.stairs[stair].val.length<2)
-        return;
+Staircase.prototype.checkLimits = function (currentStair) {
+  var stair = currentStair;
   // check limits
-    if (this.stairs[stair].val[this.stairs[stair].val.length-1]<this.stairs[stair].val[this.stairs[stair].val.length-2] &&
-        this.stairs[stair].val[this.stairs[stair].val.length-1]<this.stairs[stair].limits[0]) {
-      this.stairs[stair].val[this.stairs[stair].val.length-1] = this.stairs[stair].limits[0];
-      this.stairs[stair].limitReached = true;
-    } else if (this.stairs[stair].val[this.stairs[stair].val.length-1]>this.stairs[stair].val[this.stairs[stair].val.length-2] &&
-        this.stairs[stair].val[this.stairs[stair].val.length-1]>this.stairs[stair].limits[1]) {
-      this.stairs[stair].val[this.stairs[stair].val.length-1] = this.stairs[stair].limits[1];
-      this.stairs[stair].limitReached = true;
-    } else {
-      this.stairs[stair].limitReached = false;
-    }
+  if (stair.val[stair.val.length - 1] < stair.val[stair.val.length - 2] &&
+    stair.val[stair.val.length - 1] < stair.limits[0]) {
+    stair.val[stair.val.length - 1] = stair.limits[0];
+    stair.limitReached = true;
+  } else if (stair.val[stair.val.length - 1] > stair.val[stair.val.length - 2] &&
+    stair.val[stair.val.length - 1] > stair.limits[1]) {
+    stair.val[stair.val.length - 1] = stair.limits[1];
+    stair.limitReached = true;
+  } else {
+    stair.limitReached = false;
+  }
 };
 Staircase.prototype.next = function (goodAns) {
   this.checkErr.ARG('next', arguments, 1);
   // find the active stair
   var stair = this.getActive();
   stair.val[stair.val.length] = this.choose(goodAns);
-  this.checkLimits(stair.name);
+  this.checkLimits(stair);
   return stair.val[stair.val.length-1];
 };
 Staircase.prototype.init = function () {
@@ -255,7 +249,7 @@ Staircase.prototype.init = function () {
     }
   }
   // choose one stair to activate
-  var rand = this.randInt(0, choices.length-1);
+  var rand = randInt(0, choices.length-1);
   this.activate(choices[rand]);
   return this;
 };
@@ -303,14 +297,16 @@ Staircase.prototype.activate = function (stair) {
     console.log("Staircase '"+this.stairs[stair].name+"' now active");
 };
 Staircase.prototype.deactivate = function (stair) {
-    this.checkErr.ARG('deactivate', arguments, 1);
-    this.checkErr.UNDEFINED(this.stairs, stair);
-    this.stairs[stair].active = false;
-    this.stairs[stair].sameStairCount = 0;
-    this.stairs[stair].successiveGood = 0;
-    this.stairs[stair].limitReached = false;
-    if(this.stairs[stair].verbosity>0)
-        console.log("Staircase '"+this.stairs[stair].name+"' deactivated");
+  this.checkErr.ARG('deactivate', arguments, 1);
+  this.checkErr.UNDEFINED(this.stairs, stair);
+  this.stairs[stair].active = false;
+  if(this.stairs[stair].verbosity>0)
+    console.log("Staircase '"+this.stairs[stair].name+"' deactivated");
+};
+Staircase.prototype.resetCounts = function(stair) {
+  this.stairs[stair].sameStairCount = 0;
+  this.stairs[stair].successiveGood = 0;
+  this.stairs[stair].limitReached = false;
 };
 Staircase.prototype.isActive = function (stair) {
   this.checkErr.ARG('isActive', arguments, 1);
@@ -397,6 +393,6 @@ Staircase.prototype.checkErr = new Staircase_CheckErr(); // Set up the error che
 
 // Returns a random integer between min (inclusive) and max (inclusive)
 // Using Math.round() will give you a non-uniform distribution!
-Staircase.prototype.randInt = function (min, max) {
+function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
