@@ -7,6 +7,8 @@ In psychophysics, perception is often assessed using adaptive procedures (task d
 
 The StaircaseJS module can be used to manage the value of a stimulus implementing an adaptive procedure, typically for psychophysical experiments made in JavaScript.
 
+You can try an example of StaircaseJS [here](http://hadrienj.github.io/StaircaseJS/).
+
 # Usage
 
 Create a new staircase will allow you to store and track the values of the stimulus. The parameters of the staircase (equation used to change the value, x-up y-down etc.) has to be set when the contructor is instanciated.
