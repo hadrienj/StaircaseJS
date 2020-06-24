@@ -262,7 +262,7 @@ Staircase.prototype.changeActive = function () {
         this.deactivate(i);
     }
   }
-  var rand = this.randInt(0, possibleStairs.length-1);
+  var rand = randInt(0, possibleStairs.length-1);
   this.activate(possibleStairs[rand]);
 };
 Staircase.prototype.setsameStairMax = function (max, stair) {
